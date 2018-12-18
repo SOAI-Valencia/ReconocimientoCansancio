@@ -1,5 +1,6 @@
 # ReconocimientoCansancio
 Simple programa en python que usando tu webcam o un video detecta si tiene mucho tiempo los ojos cerrados
+![demo](dormida.gif)
 
 ## Como funciona ? 
 - Primero Detecta los puntos de referencia de la cara con una red neuronal ya entrenada.
