@@ -11,11 +11,11 @@ import cv2
 import playsound
 from threading import Thread
 
-
+#reproduce un sonido
 def sound_alarm(path):
-	# play an alarm sound
 	playsound.playsound(path)
 
+#Calcula las proporciones de los ojos
 def eye_aspect_ratio(eye):
     #Vertical eye landmarks
     A = dist.euclidean(eye[1], eye[5])
@@ -26,6 +26,7 @@ def eye_aspect_ratio(eye):
     eye_ratio = (A+B) / (2.0 * C)
     return eye_ratio
 
+#Parsea los parametros al ejecutar el programa
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--shape-predictor", default='./shape_predictor_68_face_landmarks.dat',
 	help="path to facial landmark predictor")
@@ -41,17 +42,18 @@ EYE_AR_CONSEC_FRAMES = 30
 ALARM_ON = False
 
 COUNTER = 0
+#Color del texto de los ojos
 EYE_COLOR = (0, 255, 0)
 
 #predictor facil landmarkl
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(args["shape_predictor"])
 
-#get the indexes of the eyes
+#coge los valores donde el predictor localiza los ojos
 (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
 (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-#start videostream
+#posibilidad de hacerlo con video o con la webcam
 fileStream = False
 if not args.get("video", False):
 	vs = VideoStream(src=0).start()
@@ -68,8 +70,10 @@ while True:
     
     frame = vs.read()
     frame = imutils.resize(frame, width = 450)
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+#Convierte en blanco y negro el frame
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#Coge los valores de la cara
     rects = detector(gray, 0)
 
     for rect in rects:
@@ -83,15 +87,19 @@ while True:
         #get the aspect rati0
         leftEAR = eye_aspect_ratio(leftEye)
         rightEAR = eye_aspect_ratio(rightEye)
-
+	
+	#Calcula la proporcion del ojo
         ear = (leftEAR + rightEAR) / 2.0
 
+	#Obtiene el contorno de los ojos
         leftEyeHull = cv2.convexHull(leftEye)
         rightEyeHull = cv2.convexHull(rightEye)
 
+	#Dibuja el contorno
         cv2.drawContours(frame, [leftEyeHull], -1, EYE_COLOR, 1)
         cv2.drawContours(frame, [rightEyeHull], -1, EYE_COLOR, 1)
 
+	#Aumenta el contador y crea la alerta
         if ear < EYE_AR_THRESH:
             COUNTER += 1
 
@@ -108,8 +116,6 @@ while True:
             ALARM_ON = False
         
         cv2.putText(frame, "EAR: {:.2f}".format(ear), (300,30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
-
-
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
